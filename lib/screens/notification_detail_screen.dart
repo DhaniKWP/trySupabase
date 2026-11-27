@@ -7,6 +7,10 @@ class NotificationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final extraData = Map<String, dynamic>.from(data)
+      ..remove('title')
+      ..remove('body');
+
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Notifikasi')),
       body: ListView(
@@ -24,6 +28,21 @@ class NotificationDetailScreen extends StatelessWidget {
             data['body']?.toString() ?? '-',
             style: const TextStyle(fontSize: 16),
             textAlign: TextAlign.center,
+          ),
+          const Divider(height: 32),
+          const Text(
+            'Data tambahan (data payload):',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (extraData.isEmpty) const Text('Tidak ada data tambahan.'),
+          ...extraData.entries.map(
+                (e) => Card(
+              child: ListTile(
+                title: Text(e.key),
+                subtitle: Text(e.value.toString()),
+              ),
+            ),
           ),
         ],
       ),
