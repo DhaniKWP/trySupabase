@@ -29,4 +29,40 @@ class NotificationService {
     description: 'Channel untuk notifikasi dari Firebase Cloud Messaging',
     importance: Importance.max,
   );
+
+  static Future<void> init() async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    debugPrint('[FCM] Status izin: ${settings.authorizationStatus}');
+
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    await _localNotif.initialize(
+      settings: const InitializationSettings(android: androidInit),
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        if (response.payload != null) {
+          _openDetail(jsonDecode(response.payload!) as Map<String, dynamic>);
+        }
+      },
+    );
+    await _localNotif
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+    >()
+        ?.createNotificationChannel(_channel);
+
+    try {
+      final token = await _messaging.getToken();
+      debugPrint('[FCM] TOKEN: $token');
+    } catch (e) {
+      debugPrint('[FCM] Gagal mengambil token: $e');
+    }
+    _messaging.onTokenRefresh.listen((newToken) {
+      debugPrint('[FCM] TOKEN BARU: $newToken');
+    });
+
+    await _messaging.subscribeToTopic('kelas');
+  }
 }
