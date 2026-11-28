@@ -84,4 +84,51 @@ class NotificationService {
       _openDetail(jsonDecode(payload) as Map<String, dynamic>);
     }
   }
+
+  static Future<void> _showForegroundNotification(RemoteMessage message) async {
+    debugPrint('[FCM] Pesan FOREGROUND: ${message.notification?.title}');
+    final notification = message.notification;
+    if (notification == null) return;
+
+    await _localNotif.show(
+      id: notification.hashCode,
+      title: notification.title,
+      body: notification.body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channel.id,
+          _channel.name,
+          channelDescription: _channel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+      payload: jsonEncode(_messageToMap(message)),
+    );
+  }
+
+  static Map<String, dynamic> _messageToMap(RemoteMessage message) {
+    return {
+      'title': message.notification?.title ?? '-',
+      'body': message.notification?.body ?? '-',
+      ...message.data,
+    };
+  }
+
+  static void _openDetail(Map<String, dynamic> data) {
+    void push() {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => NotificationDetailScreen(data: data),
+        ),
+      );
+    }
+
+    if (navigatorKey.currentState != null) {
+      push();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => push());
+    }
+  }
 }
