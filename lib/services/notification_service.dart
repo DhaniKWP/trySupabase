@@ -64,5 +64,24 @@ class NotificationService {
     });
 
     await _messaging.subscribeToTopic('kelas');
+
+    FirebaseMessaging.onMessage.listen(_showForegroundNotification);
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('[FCM] Dibuka dari BACKGROUND');
+      _openDetail(_messageToMap(message));
+    });
+
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      debugPrint('[FCM] Dibuka dari kondisi MATI (terminated)');
+      _openDetail(_messageToMap(initialMessage));
+    }
+
+    final launchDetails = await _localNotif.getNotificationAppLaunchDetails();
+    final payload = launchDetails?.notificationResponse?.payload;
+    if ((launchDetails?.didNotificationLaunchApp ?? false) && payload != null) {
+      _openDetail(jsonDecode(payload) as Map<String, dynamic>);
+    }
   }
 }
